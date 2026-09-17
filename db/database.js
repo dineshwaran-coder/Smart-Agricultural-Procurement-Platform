@@ -343,23 +343,38 @@ const initialData = {
   ]
 };
 
-// Always overwrite DB File to update state with DPCs
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2));
+// Always overwrite DB File to update state with DPCs (if possible)
+try {
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2));
+} catch (e) {
+  console.warn("Global init write failed (likely Vercel environment). Skipping.");
+}
 
 // Database helper methods
+let memoryDb = null;
+
 const db = {
   read: () => {
+    if (memoryDb) return memoryDb;
     try {
       const content = fs.readFileSync(DB_PATH, 'utf8');
-      return JSON.parse(content);
+      memoryDb = JSON.parse(content);
+      return memoryDb;
     } catch (e) {
-      return initialData;
+      memoryDb = initialData;
+      return memoryDb;
     }
   },
 
   write: (data) => {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    memoryDb = data;
+    try {
+      // Vercel serverless functions have a read-only filesystem except for /tmp
+      fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    } catch (e) {
+      console.warn("Could not write to disk (likely Vercel environment). Data saved in memory.");
+    }
   },
 
   // Generic Helpers
