@@ -1012,4 +1012,61 @@ h1, h2, h3, h4, h5, h6, .brand-font {
   flex-shrink: 0;
 }
 
+/* ==========================================================================
+   Smart Mandi Locator & Map Styles
+   ========================================================================== */
 
+.mandi-marker-pulse {
+  border-radius: 50%;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
+  animation: pulse-marker 2s infinite;
+}
+
+.mandi-marker-green {
+  background: #10b981;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+}
+
+.mandi-marker-yellow {
+  background: #f59e0b;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 rgba(245, 158, 11, 0.4);
+}
+
+.mandi-marker-red {
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+}
+
+@keyframes pulse-marker {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,0,0,0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0,0,0,0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+}
+
+.mandi-rec-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.mandi-rec-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #cbd5e1;
+}
+
+.mandi-rec-card.recommended {
+  border: 2px solid #10b981;
+  background: #f0fdf4;
+}
+
+.mandi-rec-card.recommended:hover {
+  border-color: #059669;
+}

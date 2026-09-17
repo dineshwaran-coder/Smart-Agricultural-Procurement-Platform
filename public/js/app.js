@@ -362,6 +362,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadFarmerPayments();
   updateTrackWorkflowUI();
   updateRoleButtonsVisibility();
+  
+  // Initialize Smart Mandi Locator
+  if (typeof initMandiLocator === 'function') {
+    initMandiLocator();
+  }
 
   // Start Real-Time Queue Polling (Every 3 seconds)
   startQueuePolling();
@@ -1657,5 +1662,92 @@ function printOfficialCertificate() {
   printWindow.document.close();
 }
 
+// -------------------------------------------------------------
+// SMART MANDI LOCATOR & AUTO-ROUTING LOGIC
+// -------------------------------------------------------------
 
+function initMandiLocator() {
+  const mapEl = document.getElementById('mandiMap');
+  if (!mapEl) return;
+  
+  // Initialize Leaflet Map centered on Thanjavur
+  const map = L.map('mandiMap').setView([10.7869, 79.1378], 11);
+  
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
 
+  const dpcs = [
+    { id: 1, name: "Panchanathikottai DPC", lat: 10.8, lng: 79.15, capacity: 30, status: 'green', desc: "Optimal Flow (Fastest)" },
+    { id: 2, name: "Thanjavur Main APMC Mandi", lat: 10.78, lng: 79.13, capacity: 95, status: 'red', desc: "Full Capacity (High Wait Time)" },
+    { id: 3, name: "Kumbakonam Hub", lat: 10.96, lng: 79.38, capacity: 60, status: 'yellow', desc: "Busy (Moderate Queue)" }
+  ];
+
+  const recList = document.getElementById('mandiRecommendationsList');
+  if (recList) recList.innerHTML = '';
+
+  dpcs.forEach((dpc, index) => {
+    // Add Markers to Map
+    let markerHtml = `<div class="mandi-marker-pulse mandi-marker-${dpc.status}" style="width:24px; height:24px;"></div>`;
+    let customIcon = L.divIcon({
+      className: 'custom-mandi-marker',
+      html: markerHtml,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    const marker = L.marker([dpc.lat, dpc.lng], { icon: customIcon }).addTo(map);
+    marker.bindTooltip(`<b>${dpc.name}</b><br>Capacity: ${dpc.capacity}%<br>${dpc.desc}`);
+    
+    marker.on('click', () => selectMandiFromMap(dpc));
+
+    // Populate Recommendation Cards
+    if (recList) {
+      const isRecommended = dpc.status === 'green' ? 'recommended' : '';
+      const recBadge = isRecommended ? `<div class="badge bg-success mb-2 text-white"><i class="fa-solid fa-star text-warning"></i> TOP PICK</div>` : '';
+      const statusIcon = dpc.status === 'green' ? '<i class="fa-solid fa-circle-check text-success"></i>' : (dpc.status === 'yellow' ? '<i class="fa-solid fa-triangle-exclamation text-warning"></i>' : '<i class="fa-solid fa-ban text-danger"></i>');
+      
+      const card = document.createElement('div');
+      card.className = `mandi-rec-card ${isRecommended}`;
+      card.innerHTML = `
+        ${recBadge}
+        <h6 class="fw-bold mb-1 fs-6">${dpc.name}</h6>
+        <div class="d-flex align-items-center justify-content-between small text-muted">
+          <span>${statusIcon} ${dpc.desc}</span>
+          <span class="fw-bold text-dark">${dpc.capacity}% Full</span>
+        </div>
+      `;
+      card.onclick = () => selectMandiFromMap(dpc);
+      recList.appendChild(card);
+    }
+  });
+}
+
+function selectMandiFromMap(dpc) {
+  // Update the dropdown in the booking form
+  const selectCenter = document.getElementById('selectCenter');
+  if (selectCenter) {
+    // Find matching option text (basic matching)
+    Array.from(selectCenter.options).forEach(opt => {
+      if (opt.text.includes(dpc.name.split(' ')[0])) {
+        selectCenter.value = opt.value;
+        if (typeof onCenterChange === 'function') onCenterChange();
+      }
+    });
+  }
+  
+  // Smooth scroll to booking form
+  const bookingCard = document.getElementById('bookingCard');
+  if (bookingCard) {
+    bookingCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Highlight the card temporarily
+    bookingCard.style.transition = 'box-shadow 0.3s ease';
+    bookingCard.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.4)';
+    setTimeout(() => {
+      bookingCard.style.boxShadow = '';
+    }, 1500);
+  }
+}

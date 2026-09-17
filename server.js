@@ -459,10 +459,16 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(` Smart Farmer Procurement Management System Running!`);
-  console.log(` Server URL: http://localhost:${PORT}`);
-  console.log(` Environment: Node.js ${process.version}`);
-  console.log(`=======================================================`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(` Smart Farmer Procurement Management System Running!`);
+    console.log(` Server URL: http://localhost:${PORT}`);
+    console.log(` Environment: Node.js ${process.version}`);
+    console.log(`=======================================================`);
+  });
+}
+
+// Export for serverless platforms like Vercel
+module.exports = app;
+
